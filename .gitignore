@@ -1,0 +1,5 @@
+invoices/*.pdf
+outputs/*.txt
+outputs/*.csv
+outputs/*.xls
+outputs/*.xlsx
