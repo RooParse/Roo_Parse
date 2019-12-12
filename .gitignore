@@ -3,5 +3,7 @@ outputs/*.txt
 outputs/*.csv
 outputs/*.xls
 outputs/*.xlsx
-.DS_Store
+*.txt
+/.DS_Store
+
 
