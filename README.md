@@ -8,3 +8,9 @@
 * Settle on a format for data
 * Zip CSVs for emailing
 * Finnish GUI
+    * Add file browser instead of file path text box
+    * Add fun images
+    * Add help
+    * Add about
+    * Add license and warnings etc
+    * dark mode?
