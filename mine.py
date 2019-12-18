@@ -11,7 +11,6 @@ from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
  
 invoices = 'invoices'
-pdf = 'invoices/invoice_9256ec7b_1279_48e4_ba52_bd1550587036_2.pdf'
 
 def extract_text(pdf_path):
     resource_manager = PDFResourceManager()
@@ -74,17 +73,14 @@ def create_df(text):
 
     return df
 
-def concat_invoices():
+def concat_invoices(text_list):
     data_df = pd.DataFrame(columns = ['Day', 'Date', 'Time_in', 'Time_out', 'Hours_worked', 'Orders', 'Total'])
     
-    for filename in os.listdir(invoices):
-        if filename.endswith(".pdf"):
-            print(os.path.join(invoices, filename))
-            text = extract_text(os.path.join(invoices, filename))
-            df = create_df(text)
-            # Could use keys arg to concat lable by date
-            data_df = pd.concat([data_df, df]) # ineficient could do better 
-            data_df.reset_index(drop=True, inplace=True)
+    for i in text_list:
+        df = create_df(i)
+        # Could use keys arg to concat lable by date
+        data_df = pd.concat([data_df, df]) # ineficient could do better 
+        data_df.reset_index(drop=True, inplace=True)
     return data_df
 
 def create_summary_df(text):
@@ -113,17 +109,14 @@ def create_summary_df(text):
     df.set_index('names_' + date, inplace=True)
     return(df)
 
-def concat_summary():
+def concat_summary(text_list):
 
     df_list = []
     full_df = pd.DataFrame()
 
-    for filename in os.listdir(invoices):
-        if filename.endswith(".pdf"):
-            print(os.path.join(invoices, filename))
-            text = extract_text(os.path.join(invoices, filename))
-            summary_df = create_summary_df(text)
-            df_list.append(summary_df)
+    for i in text_list:
+        summary_df = create_summary_df(i)
+        df_list.append(summary_df)
 
     for i, df in enumerate(df_list):
         print(df)
@@ -134,14 +127,14 @@ def concat_summary():
     return full_df
  
 def create_fee_adjustments_df(text):
-    head = ["Category","Note","Amount"]
-
+    head = ["Category","Note","Amount", "Date"]
+    date = re.findall('\d{2}\D{3,}\d{4}',text)[0]
     s = text.split('Summary')[0] # Take all text after 'Summary'
     if re.search('Fee Adjustments', s):
         s = s.split('CategoryNoteAmount')[1] # Take all text after 'Fee Adjustments'
     else:
         return 'No Adjustments'
-    head = ["Category","Note","Amount"]
+
     total = re.split('(£\d+.\d{2})',s)[-3:-1]
     ex_total = re.split('(£\d+.\d{2})',s)[:-3]
     
@@ -151,11 +144,11 @@ def create_fee_adjustments_df(text):
     amount = re.findall('(£\d+.\d{2})', str(ex_total))
 
     list_list = []
-    for c, n, a in zip(cat, note, amount):
-        list_list.append([c, n, a])
+    for c, n, a, d in zip(cat, note, amount, [date]):
+        list_list.append([c, n, a, d])
 
-    print(list_list)
-
+    print(date)
+    #print(list_list)
     #print(ex_total)
     #print(cat)
     #print(note)
@@ -164,44 +157,51 @@ def create_fee_adjustments_df(text):
     total.insert(1,"-")
 
     df = pd.DataFrame()
-    df = df.append(pd.DataFrame(data=[head]))
+    #df = df.append(pd.DataFrame(data=[head]))
 
     for row in list_list:
         df = df.append(pd.DataFrame(data=[row]), ignore_index=True)
     
-    df = df.append(pd.DataFrame(data=[total]))
+    #df = df.append(pd.DataFrame(data=[total]))
     print(df)
-
-    with open("raw.txt", "w") as raw:
-        raw.write(s)
     return df
 
-def concat_fee_adjustments():
+def concat_fee_adjustments(text_list):
 
     df_list = []
     full_df = pd.DataFrame()
 
-    for filename in os.listdir(invoices):
+    for i in text_list:
+        df = create_fee_adjustments_df(i)
+        if type(df) != str:
+            df_list.append(df)
+    for i, df in enumerate(df_list):
+        full_df = full_df.append(df)
+        #full_df = pd.merge(full_df, df_list[i], left_index=True, right_index=True, how='outer')
+    return full_df
+
+def get_text_list(invoice_path):
+    text_list = []
+    for filename in os.listdir(invoice_path):
         if filename.endswith(".pdf"):
             print(os.path.join(invoices, filename))
-            text = extract_text(os.path.join(invoices, filename))
-            df = create_fee_adjustments_df(text)
-            if type(df) != str:
-                df_list.append(df)
-    for i, df in enumerate(df_list):
-        print(df)
-        full_df = pd.merge(full_df, df_list[i], left_index=True, right_index=True, how='outer')
-  
-if __name__ == '__main__':
+            text = extract_text(os.path.join(invoice_path, filename))
+            text_list.append(text)
+    return text_list
 
-    fa_df = concat_fee_adjustments()
+def main(invoice_path):
+    text_list = get_text_list(invoice_path)
+
+    fa_df = concat_fee_adjustments(text_list)
+    fa_df.to_csv("outputs/adjustments.csv")
     print(fa_df)
 
     # Done --------------------------+
     
-    #data_df = concat_invoices()
-    #data_df.to_csv("outputs/data.csv")
-    #print(data_df)
+    data_df = concat_invoices(text_list)
+    data_df.to_csv("outputs/data.csv")
+    print(data_df)
 
-    #summary_df = concat_summary()
-    #print(summary_df)
+    summary_df = concat_summary(text_list)
+    summary_df.to_csv("outputs/summery.csv")
+    print(summary_df)
