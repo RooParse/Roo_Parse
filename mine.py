@@ -2,7 +2,7 @@
 import io
 import os 
 import re 
-
+from datetime import datetime
 import pandas as pd
 
 from pdfminer.converter import TextConverter
@@ -47,17 +47,20 @@ def create_df(text):
     h = [re.sub('h','' , i) for i in h] # remove h
     h = [re.sub(':..','' , i) for i in h] # remove :xx
 
-    d = re.findall('\d{2}\D{3,}\d{4}',s) # re for date
-    # v = re.findall('£\d{1,}.\d{2}',s)
+    #d = re.findall('\d{2}\D{3,}\d{4}',s) # re for date
+    date_list = re.findall('\d{2} [A-Za-z]{3,} \d{4}',s)
+    dt = [datetime.strptime(x, '%d %B %Y') for x in date_list]
+    d = [datetime.strftime(x, "%m-%d-%y") for x in dt]
+
     ov = re.findall('\d*: £\d{1,}.\d{2}',s) # get number of orders and value in £
     o = [i.split(': ')[0] for i in ov] # Split into orders and value 
-    #v = [i.split(': ')[1] for i in ov]
+
     v = [re.sub('£', '', i.split(': ')[1]) for i in ov]
 
     day = re.findall('Monday|Tuesday|Wednesday|Thursday|Friday|Saturday|Sunday', s)
 
     #print(s)
-    print(str(day) + '\n' + str(d) + '\n' + str(ti) + '\n' + str(to) + '\n' + str(h) + '\n' + str(o) + '\n' + str(v))
+    #print(str(day) + '\n' + str(d) + '\n' + str(ti) + '\n' + str(to) + '\n' + str(h) + '\n' + str(o) + '\n' + str(v))
 
     df = pd.DataFrame(
         {
@@ -86,7 +89,11 @@ def concat_invoices(text_list):
 def create_summary_df(text):
     s = text.split('Summary')[1] # Take all text after 'Summary'
     split = re.split('(.\d+.\d+)',s) # Split based £xx.xx where x is a didget
-    date = re.findall('\d{2}\D{3,}\d{4}',text)[0]
+    date_list = re.findall('\d{2} [A-Za-z]{3,} \d{4}',text)
+    date = date_list[0]
+    date_converted = [datetime.strptime(x, '%d %B %Y') for x in date_list]
+
+    print (date_converted)
 
     for i in range(len(split)): # Remove weird thing
         if split[i] == "\x0c":
@@ -121,8 +128,6 @@ def concat_summary(text_list):
     for i, df in enumerate(df_list):
         print(df)
         full_df = pd.merge(full_df, df_list[i], left_index=True, right_index=True, how='outer')
-        #full_df = full_df.join(df, how= "outer")
-        #full_df.join(df_list[i]) 
 
     return full_df
  
@@ -147,23 +152,13 @@ def create_fee_adjustments_df(text):
     for c, n, a, d in zip(cat, note, amount, [date]):
         list_list.append([c, n, a, d])
 
-    print(date)
-    #print(list_list)
-    #print(ex_total)
-    #print(cat)
-    #print(note)
-    #print(amount)
-
     total.insert(1,"-")
 
     df = pd.DataFrame()
-    #df = df.append(pd.DataFrame(data=[head]))
 
     for row in list_list:
         df = df.append(pd.DataFrame(data=[row]), ignore_index=True)
-    
-    #df = df.append(pd.DataFrame(data=[total]))
-    print(df)
+
     return df
 
 def concat_fee_adjustments(text_list):
@@ -177,7 +172,7 @@ def concat_fee_adjustments(text_list):
             df_list.append(df)
     for i, df in enumerate(df_list):
         full_df = full_df.append(df)
-        #full_df = pd.merge(full_df, df_list[i], left_index=True, right_index=True, how='outer')
+
     return full_df
 
 def get_text_list(invoice_path):
@@ -196,8 +191,6 @@ def main(invoice_path):
     fa_df.to_csv("outputs/adjustments.csv")
     print(fa_df)
 
-    # Done --------------------------+
-    
     data_df = concat_invoices(text_list)
     data_df.to_csv("outputs/data.csv")
     print(data_df)
