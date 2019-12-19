@@ -1,6 +1,8 @@
 
 import io
 import os 
+import zipfile
+import shutil
 import re 
 from datetime import datetime
 import pandas as pd
@@ -9,8 +11,6 @@ from pdfminer.converter import TextConverter
 from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
- 
-invoices = 'invoices'
 
 def extract_text(pdf_path):
     resource_manager = PDFResourceManager()
@@ -179,10 +179,13 @@ def get_text_list(invoice_path):
     text_list = []
     for filename in os.listdir(invoice_path):
         if filename.endswith(".pdf"):
-            print(os.path.join(invoices, filename))
+            print(os.path.join(invoice_path, filename))
             text = extract_text(os.path.join(invoice_path, filename))
             text_list.append(text)
     return text_list
+
+def zipdir(path_to_save, path_to_compress):
+    shutil.make_archive(os.path.join(path_to_save, "data"), 'zip', path_to_compress)
 
 def main(invoice_path):
     text_list = get_text_list(invoice_path)
@@ -198,3 +201,18 @@ def main(invoice_path):
     summary_df = concat_summary(text_list)
     summary_df.to_csv("outputs/summery.csv")
     print(summary_df)
+
+    #zipf = zipfile.ZipFile('data.zip', 'w', zipfile.ZIP_DEFLATED)
+    #zipdir('outputs', zipf)
+    #zipf.close()
+'''
+    def zipdir(path_to_save, path_to_compress):
+    # ziph is zipfile handle
+    print(path_to_compress)
+    print(path_to_save)
+    ziph = zipfile.ZipFile('data.zip', 'w', zipfile.ZIP_DEFLATED)
+    for root, dirs, files in os.walk(path_to_compress):
+        for file in files:
+            ziph.write(os.path.join(path_to_save, file))
+    ziph.close()
+'''
