@@ -1,0 +1,9 @@
+invoices/*.pdf
+outputs/*.txt
+outputs/*.csv
+outputs/*.xls
+outputs/*.xlsx
+*.txt
+/.DS_Store
+
+
