@@ -10,7 +10,7 @@ liscense = '''
 This program was created to make tax returns easier and facilitate gathering of data so riders can see what the effects of changes in the algorythms are having on hourly rate over time.
 
 Begin license text.
-Copyright 2019 
+Copyright 2019
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
 
@@ -31,12 +31,28 @@ help_str = '''
 4. Click save. This will overwrite any folder called "data.zip" in the directory you selected. \n
 '''
 
-
+data_str = '''
+Greetings valued user! \n
+Please consider sending in your earnings data, i'm compiling a database to look into fees over time so the more data I can add to that
+database the better. The results and the database will be published online so anyone can view and analyse it themselves if they wish. 
+All data is anonomous, no identifyable information is harvested from the invoces. The only personal info in the invoices is the riders
+name but this is not saved. The source code of this app can be viewed on github at: https://github.com/RooParse/Roo_Parse 
+ 
+If you would like to contribute to the database please send the zip file ouput containing the csv data to: rooparse@gmail.com
+Please also email with any questions and if you would like to contribute to rooparse itself.
+'''
+def zipdir(path_to_save, path_to_compress): 
+    f = os.path.join(path_to_save, "data.zip" + VERSION)
+    if os.path.exists(f): # Check if file exists, and delete if true
+        os.remove(f)
+    shutil.make_archive(os.path.join(path_to_save, "data"), 'zip', path_to_compress)
+    messagebox.showinfo("Thank's!", "Data saved to :" + path_to_save + "\n\n Please consider sending in your earnings data, i'm compiling a database to look into fees over time so the more data I can add to that database the better. The results and the database will be published online so anyone can view and analyse it themselves if they wish. All data is anonomous, no identifyable information is harvested from the invoces. The only personal info in the invoices is the riders name but this is not saved. The source code of this app can be viewed on github. Send it to: rooparse@gmail.com")
+    
 
 class GUI:
     def __init__(self, master):
         self.master = master
-        master.title("Roo Parse")
+        master.title("Roo Parse " + VERSION)
         master.configure(background='black')
 
         self.run_button = Button(master, text="Run", command = lambda: main(self.inv_folder), anchor='w', width=20,justify=LEFT)
@@ -48,7 +64,7 @@ class GUI:
         self.about_button = Button(master, text="About", command=self.about, anchor='w', width=20, justify=LEFT)
         self.about_button.pack(fill=X)   
 
-        self.save_button = Button(master, text="Save", command = lambda: zipdir (self.save_folder,'outputs'), anchor='w', width=20, justify=LEFT)
+        self.save_button = Button(master, text="Save", command = lambda : zipdir (self.save_folder,'outputs'), anchor='w', width=20, justify=LEFT)
         self.save_button.pack(fill=X)  
 
         self.browse_file = Button(master, text="Select invoice folder", command=self.browseFile, anchor='w', width=20, justify=LEFT)
@@ -59,6 +75,9 @@ class GUI:
 
         image = Image.open("roo.png")
         photo = ImageTk.PhotoImage(image)
+
+        self.label_data_message = Label(self.master, text= data_str, bg="black", fg="green", anchor='w', width=20, justify=LEFT)
+        self.label_data_message.pack(fill=X)
 
         label = Label(image=photo, borderwidth=0 , highlightthickness=0, relief=None, padx=0,pady=0)
         label.image = photo # keep a reference!
@@ -93,8 +112,10 @@ class GUI:
         self.save_folder = askdirectory()
         self.label_save = Label(self.master, text="Save file path: " + self.save_folder, bg="black", fg="green", anchor='w', width=20, justify=LEFT)
         self.label_save.pack(fill=X, side=BOTTOM)
-        messagebox.showinfo("Thank's!", "Data saved to :" + str(self.saveFile) + "\nPlease consider sending in your earnings data, im compiling a database to look into fees over time and i would. All data is anonomous and the source code of this app can be viewed on github. Send it to: email@mail.com")
-
+        
+    def save_message(self):
+        messagebox.showinfo("Thank's!", "Data saved to :" + str(self.save_folder) + "\n\n Please consider sending in your earnings data, i'm compiling a database to look into fees over time so the more data I can add to that database the better. The results and the database will be published online so anyone can view and analyse it themselves if they wish. All data is anonomous, no identifyable information is harvested from the invoces. The only personal info in the invoices is the riders name but this is not saved. The source code of this app can be viewed on github. Send it to: rooparse@gmail.com")
+    
     def help(self):
         messagebox.showinfo("Help", help_str)
 

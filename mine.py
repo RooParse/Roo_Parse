@@ -11,7 +11,9 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 
-def extract_text(pdf_path):
+VERSION = "0.1"
+
+def extract_text(pdf_path): # Stolen function to convert pdfs to text
     resource_manager = PDFResourceManager()
     fake_file_handle = io.StringIO()
     converter = TextConverter(resource_manager, fake_file_handle)
@@ -92,11 +94,12 @@ def create_summary_df(text):
     date = date_list[0]
     date_converted = [datetime.strptime(x, '%d %B %Y') for x in date_list]
 
-    print (date_converted)
-
     for i in range(len(split)): # Remove weird thing
         if split[i] == "\x0c":
             split.remove(split[i])
+    
+    split = [re.sub('£|Â', '', i) for i in split]
+
 
     names = []
     values = [] 
@@ -106,6 +109,9 @@ def create_summary_df(text):
         else:
             values.append(split[i])
     # Create pandas dataframe from names and values
+
+    #val = [re.sub('£', '', i) for i in values]
+
     df = pd.DataFrame(
         {
             'names_' + date: names,
@@ -183,11 +189,6 @@ def get_text_list(invoice_path):
             text_list.append(text)
     return text_list
 
-def zipdir(path_to_save, path_to_compress): 
-    f = os.path.join(path_to_save, "data.zip")
-    if os.path.exists(f): # Check if file exists, and delete if true
-        os.remove(f)
-    shutil.make_archive(os.path.join(path_to_save, "data"), 'zip', path_to_compress)
 
 def main(invoice_path):
     text_list = get_text_list(invoice_path)

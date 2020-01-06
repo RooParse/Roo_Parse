@@ -29,6 +29,13 @@ This program was created to make tax returns easier and facilitate gathering of 
 * Create Column for file name of invoice
 * Fix bug with dates, alternating dashes and slashes for some reason 
 
+<<<<<<< HEAD
+=======
+#### For data processing.
+* Create script to read the rooparse email box 
+* Add a system to pass on the rooparse version in the file name 
+
+>>>>>>> f65d09d58bcfd5dd6cd905c555486811fba12dae
 ## Done
 ***
 * Change format of date
