@@ -1,4 +1,3 @@
-
 import io
 import os 
 import zipfile
@@ -50,7 +49,7 @@ def create_df(text):
     #d = re.findall('\d{2}\D{3,}\d{4}',s) # re for date
     date_list = re.findall('\d{2} [A-Za-z]{3,} \d{4}',s)
     dt = [datetime.strptime(x, '%d %B %Y') for x in date_list]
-    d = [datetime.strftime(x, "%m-%d-%y") for x in dt]
+    d = [datetime.strftime(x, "%d-%m-%y") for x in dt]
 
     ov = re.findall('\d*: £\d{1,}.\d{2}',s) # get number of orders and value in £
     o = [i.split(': ')[0] for i in ov] # Split into orders and value 
@@ -184,7 +183,10 @@ def get_text_list(invoice_path):
             text_list.append(text)
     return text_list
 
-def zipdir(path_to_save, path_to_compress):
+def zipdir(path_to_save, path_to_compress): 
+    f = os.path.join(path_to_save, "data.zip")
+    if os.path.exists(f): # Check if file exists, and delete if true
+        os.remove(f)
     shutil.make_archive(os.path.join(path_to_save, "data"), 'zip', path_to_compress)
 
 def main(invoice_path):
@@ -201,18 +203,3 @@ def main(invoice_path):
     summary_df = concat_summary(text_list)
     summary_df.to_csv("outputs/summery.csv")
     print(summary_df)
-
-    #zipf = zipfile.ZipFile('data.zip', 'w', zipfile.ZIP_DEFLATED)
-    #zipdir('outputs', zipf)
-    #zipf.close()
-'''
-    def zipdir(path_to_save, path_to_compress):
-    # ziph is zipfile handle
-    print(path_to_compress)
-    print(path_to_save)
-    ziph = zipfile.ZipFile('data.zip', 'w', zipfile.ZIP_DEFLATED)
-    for root, dirs, files in os.walk(path_to_compress):
-        for file in files:
-            ziph.write(os.path.join(path_to_save, file))
-    ziph.close()
-'''
