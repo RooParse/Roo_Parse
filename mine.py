@@ -11,6 +11,11 @@ from pdfminer.pdfinterp import PDFPageInterpreter
 from pdfminer.pdfinterp import PDFResourceManager
 from pdfminer.pdfpage import PDFPage
 
+'''
+After initial release changes to mine.py, the parsing script increase the version number to the next whole number.
+After changes to gui.py add 0.1 to version number.
+'''
+
 VERSION = "0.1"
 
 def extract_text(pdf_path): # Stolen function to convert pdfs to text
@@ -91,15 +96,15 @@ def create_summary_df(text):
     s = text.split('Summary')[1] # Take all text after 'Summary'
     split = re.split('(.\d+.\d+)',s) # Split based £xx.xx where x is a didget
     date_list = re.findall('\d{2} [A-Za-z]{3,} \d{4}',text)
-    date = date_list[0]
-    date_converted = [datetime.strptime(x, '%d %B %Y') for x in date_list]
+    dt = [datetime.strptime(x, '%d %B %Y') for x in date_list]
+    date_list_converted = [datetime.strftime(x, "%d-%m-%y") for x in dt]
+    date = date_list_converted[0]
 
     for i in range(len(split)): # Remove weird thing
         if split[i] == "\x0c":
             split.remove(split[i])
     
     split = [re.sub('£|Â', '', i) for i in split]
-
 
     names = []
     values = [] 
@@ -115,7 +120,7 @@ def create_summary_df(text):
     df = pd.DataFrame(
         {
             'names_' + date: names,
-            'values_' + date: values
+            '' + date: values
         }
     )
     df.set_index('names_' + date, inplace=True)
@@ -138,7 +143,17 @@ def concat_summary(text_list):
  
 def create_fee_adjustments_df(text):
     head = ["Category","Note","Amount", "Date"]
-    date = re.findall('\d{2}\D{3,}\d{4}',text)[0]
+
+    date_list = re.findall('\d{2}\D{3,}\d{4}',text)[0]
+    print(type(date_list))
+    if type(date_list) == str:
+        date_list = [date_list]
+
+    dt = [datetime.strptime(x, '%d %B %Y') for x in date_list]
+    print(dt)
+    date = [datetime.strftime(x, "%d-%m-%y") for x in dt]
+    print(date)
+    date = [re.sub("\[|'","", i) for i in date]
     s = text.split('Summary')[0] # Take all text after 'Summary'
     if re.search('Fee Adjustments', s):
         s = s.split('CategoryNoteAmount')[1] # Take all text after 'Fee Adjustments'
@@ -150,11 +165,14 @@ def create_fee_adjustments_df(text):
     
     cat = re.findall("[A-Z]{2,} [A-Z]{2,}", str(ex_total))
     cat = [i[:-1] for i in cat]
+
     note = re.findall("[A-Z][a-z][A-Za-z0-9 ]*", str(ex_total))
+
     amount = re.findall('(£\d+.\d{2})', str(ex_total))
+    amount = [re.sub('£|Â|-', '', i) for i in amount]
 
     list_list = []
-    for c, n, a, d in zip(cat, note, amount, [date]):
+    for c, n, a, d in zip(cat, note, amount, date):
         list_list.append([c, n, a, d])
 
     total.insert(1,"-")

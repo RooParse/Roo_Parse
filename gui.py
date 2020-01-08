@@ -33,13 +33,19 @@ help_str = '''
 
 data_str = '''
 Greetings valued user! \n
-Please consider sending in your earnings data, i'm compiling a database to look into fees over time so the more data I can add to that
-database the better. The results and the database will be published online so anyone can view and analyse it themselves if they wish. 
-All data is anonomous, no identifyable information is harvested from the invoces. The only personal info in the invoices is the riders
-name but this is not saved. The source code of this app can be viewed on github at: https://github.com/RooParse/Roo_Parse 
+Please consider sending in your earnings data, i'm compiling a database to
+look into fees over time so the more data I can add to that database the 
+better. The results and the database will be published online so anyone 
+can view and analyse it themselves if they wish. All data is anonomous, 
+no identifyable information is harvested from the invoces. The only personal
+info in the invoices is the ridersname but this is not saved. The source 
+code of this app can be viewed on github at: https://github.com/RooParse/Roo_Parse 
  
-If you would like to contribute to the database please send the zip file ouput containing the csv data to: rooparse@gmail.com
-Please also email with any questions and if you would like to contribute to rooparse itself.
+If you would like to contribute to the database please send the zip
+file ouput containing the csv data to: rooparse@gmail.com
+
+Please also email with any questions and if you would like to 
+contribute to rooparse itself.
 '''
 def zipdir(path_to_save, path_to_compress): 
     f = os.path.join(path_to_save, "data.zip" + VERSION)
